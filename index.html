@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To Do App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="h-screen w-full m-0 flex items-center justify-center bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200"
+  >
+    <main
+      class="py-8 h-[90%] w-[90%] max-w-md rounded-2xl shadow-2xl backdrop-blur-xl bg-white/30 border border-white/40"
+    >
+      <!-- upper part -->
+      <div
+        id="container"
+        class="h-[20%] w-[90%] mx-auto rounded-xl border border-purple-300 bg-white/20 backdrop-blur-md shadow-inner flex justify-between items-center gap-4 p-4 mb-6"
+      >
+        <!-- progress-bar -->
+        <div id="progressBar" class="flex-1">
+          <h1 class="text-indigo-800 font-extrabold text-2xl mb-1">
+            🚀 Todo App
+          </h1>
+          <p class="text-indigo-600 text-sm mb-2">
+            Keep it up, you're doing great!
+          </p>
+          <div
+            id="status-container"
+            class="w-full bg-gray-300 rounded-full h-2"
+          >
+            <div
+              id="status"
+              class="bg-indigo-500 h-2 w-0 rounded-full transition-all duration-300"
+            ></div>
+          </div>
+        </div>
+        <!-- circle -->
+        <div
+          id="circle"
+          class="border-4 border-purple-400 bg-white text-purple-700 text-lg font-bold flex items-center justify-center rounded-full w-20 h-20 shadow-md"
+        >
+          
+        </div>
+      </div>
+
+      <!-- lower Section -->
+      <div id="task" class="px-6">
+        <!-- input section -->
+        <div
+          id="addTask"
+          class="flex items-center justify-between gap-4 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl px-4 py-3 shadow-lg"
+        >
+          <form action="" class="flex items-center justify-between gap-10">
+            <input
+              id="taskInput"
+              type="text"
+              placeholder="Add task here..."
+              class="flex-grow px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-gray-800 placeholder-gray-400"
+            />
+            <button
+              id="newTask"
+              class="h-12 w-12 rounded-full flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 transition shadow-md"
+            >
+              <img
+                src="./assests/add_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
+                alt="add"
+                class="w-6 h-6 invert"
+              />
+            </button>
+          </form>
+        </div>
+        <ul id="tasklist" class="mb-6"></ul>
+      </div>
+    </main>
+    <script>
+      let taskInput = document.querySelector("#taskInput");
+      let newTask = document.querySelector("#newTask");
+
+     let task = [];
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const stored = JSON.parse(localStorage.getItem('task'))
+  if(stored){
+    stored.forEach((tasks)=>task.push(tasks))
+    upDateTaskList()
+    progress_bar()
+  }
+})
+
+      const local = ()=>{
+        localStorage.setItem('task',JSON.stringify(task))
+      }
+
+
+      let toggleList = (index)=>{
+             task[index].completed = !task[index].completed
+             console.log(task)
+             progress_bar()
+             local()
+      }
+      //delete Task
+      function deleteTask(index){
+        task.splice(index,1)
+        upDateTaskList()
+        progress_bar()
+        local()
+      }
+       //edit Task
+      function edit(index){
+        taskInput.value = task[index].text
+        task.splice(index,1)
+        upDateTaskList()
+        progress_bar()
+        local()
+      }
+
+      function progress_bar(){
+          const completeTask = task.filter(task => task.completed).length
+          const totalTask = task.length
+          const progress = (completeTask/totalTask)*100
+          const progressBar = document.getElementById("status")
+          console.log(progress)
+          progressBar.style.width = `${progress}%`
+          document.getElementById("circle").innerText = `${completeTask}/${totalTask}`
+
+          if(task.length && completeTask === totalTask){
+            confetti()
+          }
+      }
+      // added in array
+      let upDateTaskList = () => {
+        // selecting ul
+        const tasklistul = document.querySelector("#tasklist");
+        tasklistul.innerHTML = "";
+        task.forEach((tasks, index) => {
+          //Creating list element for each array
+          const listElement = document.createElement("li");
+          listElement.innerHTML = `
+       <div class="taskItem mt-2 flex justify-center items-center gap-4 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl px-4 py-3 shadow-lg">
+                <div class="flex gap-10 ${tasks.completed ? 'completed' : " "}">
+                  <input type="checkbox" class="check" ${tasks.completed ? 'checked' : " "}>
+                  <p>${tasks.text}</p>
+                </div>
+            <div class="icon flex gap-6">
+              <img src="../To_Do_App/assests/edit_square_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="edit" onClick="edit(${index})">
+              <img src="../To_Do_App/assests/delete_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="delete" onClick="deleteTask(${index})">
+            </div>
+       </div>`;
+        console.log(task)
+          listElement.addEventListener("change", () => toggleList(index));
+          tasklistul.append(listElement);
+        });
+      };
+      // step 2 addTask to Array
+      let addTask = () => {
+        
+        let text = taskInput.value.trim();
+        if (text) {
+          task.push({ text: text, completed: false });
+          taskInput.value = "";
+          upDateTaskList();
+          progress_bar()
+          local()
+        }
+        // console.log(task);
+      };
+      // Step 1 press button to add task
+      newTask.addEventListener("click", (e) => {
+        e.preventDefault();
+        addTask();
+      });
+
+      function confetti(){
+        const defaults = {
+  spread: 360,
+  ticks: 50,
+  gravity: 0,
+  decay: 0.94,
+  startVelocity: 30,
+  shapes: ["star"],
+  colors: ["FFE400", "FFBD00", "E89400", "FFCA6C", "FDFFB8"],
+};
+
+function shoot() {
+  confetti({
+    ...defaults,
+    particleCount: 10,
+    scalar: 1.2,
+    shapes: ["star"],
+  });
+
+  confetti({
+    ...defaults,
+    particleCount: 10,
+    scalar: 0.75,
+    shapes: ["circle"],
+  });
+}
+
+setTimeout(shoot, 0);
+setTimeout(shoot, 100);
+setTimeout(shoot, 200);
+      }
+      confetti()
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@tsparticles/confetti@3.0.3/tsparticles.confetti.bundle.min.js"></script>
+  </body>
+</html>
